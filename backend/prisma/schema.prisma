@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DRIVER
+  CLIENT
+  ADMIN
+}
+
+enum DriverClientStatus {
+  PENDING
+  ACTIVE
+  BLOCKED
+}
+
+enum RideRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum TripStatus {
+  ONGOING
+  COMPLETED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  phoneNumber  String   @unique
+  passwordHash String
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now())
+
+  driverClients DriverClient[] @relation("driver")
+  clientDrivers DriverClient[] @relation("client")
+
+  driverRideRequests RideRequest[] @relation("rideRequest_driver")
+  clientRideRequests RideRequest[] @relation("rideRequest_client")
+}
+
+model DriverClient {
+  id        String             @id @default(uuid()) @db.Uuid
+  driverId  String             @db.Uuid
+  clientId  String             @db.Uuid
+  status    DriverClientStatus @default(PENDING)
+  createdAt DateTime           @default(now())
+
+  driver User @relation("driver", fields: [driverId], references: [id], onDelete: Cascade)
+  client User @relation("client", fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, clientId])
+  @@index([driverId])
+  @@index([clientId])
+}
+
+model RideRequest {
+  id             String            @id @default(uuid()) @db.Uuid
+  publicId       String            @unique @default(cuid())
+  driverId        String            @db.Uuid
+  clientId        String            @db.Uuid
+  pickupAddress   String
+  pickupLat       Float
+  pickupLng       Float
+  dropoffAddress  String
+  dropoffLat      Float
+  dropoffLng      Float
+  scheduledTime   DateTime?
+  status          RideRequestStatus @default(PENDING)
+  createdAt       DateTime          @default(now())
+
+  driver User @relation("rideRequest_driver", fields: [driverId], references: [id], onDelete: Cascade)
+  client User @relation("rideRequest_client", fields: [clientId], references: [id], onDelete: Cascade)
+
+  trip Trip?
+
+  @@index([driverId])
+  @@index([clientId])
+  @@index([status])
+}
+
+model Trip {
+  id            String    @id @default(uuid()) @db.Uuid
+  publicId      String    @unique @default(cuid())
+  rideRequestId String    @unique @db.Uuid
+  startTime     DateTime  @default(now())
+  endTime       DateTime?
+  fare          Float?
+  status        TripStatus @default(ONGOING)
+
+  rideRequest RideRequest @relation(fields: [rideRequestId], references: [id], onDelete: Cascade)
+  locations   Location[]
+}
+
+model Location {
+  id        String   @id @default(uuid()) @db.Uuid
+  tripId    String   @db.Uuid
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([timestamp])
+}

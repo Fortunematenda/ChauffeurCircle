@@ -1,0 +1,27 @@
+# dependencies
+**/node_modules/
+
+# build outputs
+backend/dist/
+**/dist/
+
+# env files
+**/.env
+**/.env.*
+!**/.env.example
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# expo / react native
+mobile/.expo/
+mobile/.expo-shared/
+mobile/web-build/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
