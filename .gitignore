@@ -19,6 +19,8 @@ yarn-error.log*
 mobile/.expo/
 mobile/.expo-shared/
 mobile/web-build/
+mobile/.git_backup/
+mobile - Copy/
 
 # OS / IDE
 .DS_Store
